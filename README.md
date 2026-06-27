@@ -11,6 +11,13 @@ exploit, no running the app. You only read the source and reason about it. Some
 cases are genuinely vulnerable; others are deliberate **false positives** that
 look risky but are safe. Telling them apart is the point.
 
+> **Read the dependencies.** The cases reference shared code in `helpers/`
+> (package `org.owasp.benchmark.helpers`) and config in `benchmark.properties`
+> by fully-qualified name. The verdict often depends on them (e.g. which hash
+> algorithm `benchmark.properties` selects, or whether a `helpers` method is a
+> safe constant or a tainted source). See `participant-guide.md →
+> Repository contents`.
+
 ## What you do
 
 For every `cases/BenchmarkTestNNNNN.java`, produce one JSON file named after the
