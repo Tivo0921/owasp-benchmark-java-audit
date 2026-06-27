@@ -1,0 +1,9 @@
+# Keep participant submissions out of the public repo by default.
+# (Remove this line if you want submissions committed.)
+submissions/*/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+__pycache__/
