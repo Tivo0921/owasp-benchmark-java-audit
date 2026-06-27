@@ -27,6 +27,43 @@ For each case we score whether you can:
 4. explain the root cause (`root_cause`), and
 5. propose a fix (`patch_strategy`).
 
+## How scoring works (read carefully)
+
+Each case is worth **3 points**, scored automatically:
+
+| Field                 | Points | Awarded when …                                |
+| --------------------- | ------ | --------------------------------------------- |
+| `is_vulnerable`       | 1      | matches the ground truth (`true`/`false`)     |
+| `cwe`                 | 1      | the CWE id matches the case's category        |
+| `bug_type` / category | 1      | maps to the case's vulnerability category     |
+
+`root_cause` and `patch_strategy` are **not auto-scored** but are recorded for
+qualitative review — fill them in.
+
+### IMPORTANT — cases that are NOT vulnerable (false positives)
+
+Every case **belongs to one vulnerability category** (e.g. SQL Injection),
+**even when the code is actually safe**. The "safe" cases are deliberate false
+positives: code that looks like that category's bug but has been made safe
+(input validated, safe API used, etc.).
+
+So for a case you judge **safe**:
+
+- set `is_vulnerable: false`, **and**
+- still fill `bug_type` and `cwe` with **the category the code is about**
+  (the vulnerability class it superficially resembles / is testing).
+
+In other words: `is_vulnerable` answers *"is this actually exploitable?"*, while
+`bug_type`/`cwe` answer *"which vulnerability class is this code concerned
+with?"*. **Do not leave `cwe` / `bug_type` blank on safe cases** — you would
+lose those 2 points even though your safe/vulnerable verdict was correct.
+
+Example — a safe SQL-Injection-style case:
+
+```json
+{ "is_vulnerable": false, "bug_type": "SQL Injection", "cwe": "CWE-89", "...": "..." }
+```
+
 ## Which AI agents you may use
 
 You may use any AI coding agent or LLM-based assistant (e.g. Claude Code, an
@@ -45,6 +82,32 @@ provided in `cases/`. **Web search / browsing is disabled.**
 If the organizer explicitly runs an *open-book* round, you may enable web
 search, but you must set `"web_search_used": true` in every report so the two
 conditions can be compared. When in doubt, keep web search **off**.
+
+### Why this matters
+
+The OWASP Benchmark answer key is **publicly available on the internet**. The
+validity of a closed-book run therefore depends entirely on the **agent not
+looking anything up during the run** — not on the answers being secret. A
+closed-book result is only meaningful if the agent:
+
+1. **does not use web search / browsing**, and
+2. **only reads files inside this repository** (the `cases/` folder) — it must
+   not open other directories, sibling repos, or the organizer's grading repo.
+
+### Enforcing closed-book (Claude Code)
+
+This repo ships a `.claude/settings.json` that **denies `WebSearch` and
+`WebFetch`** so a Claude Code session started here cannot browse. To keep the
+run clean:
+
+- Clone and open **only this repository**; run the agent with this folder as the
+  working directory.
+- Do **not** add other directories to the agent's context (no `--add-dir`, no
+  pasting external files).
+- Keep the shipped `.claude/settings.json` in place; do not re-enable web tools.
+
+For other agents/IDEs, apply the equivalent: disable web/browse tools and scope
+file access to this folder only. Then set `"web_search_used": false` honestly.
 
 ## Submission format
 
@@ -73,9 +136,11 @@ Produce **one JSON file per case**, named after the test, e.g.
 Field notes:
 
 - `is_vulnerable` — `true` or `false` (use your best judgement; `null` scores 0).
-- `bug_type` — a category name such as `SQL Injection`, `Cross-Site Scripting`,
-  `Command Injection`, `Path Traversal`, `Weak Hash`, `LDAP Injection`.
-- `cwe` — `CWE-89` or `89` are both accepted.
+- `bug_type` — the category name, **even on safe cases** (see *How scoring
+  works*): `SQL Injection`, `Cross-Site Scripting`, `Command Injection`,
+  `Path Traversal`, `Weak Hash`, `LDAP Injection`.
+- `cwe` — `CWE-89` or `89` are both accepted. **Fill it in on safe cases too**,
+  using the category's CWE.
 - `confidence` — a number from `0.0` to `1.0` (not scored, but recorded).
 
 Place your files under a single folder named after your team or model:
@@ -103,6 +168,7 @@ short `notes.md` is fine) the **human intervention level**, e.g.:
 - [ ] One JSON per case, named `BenchmarkTestNNNNN.json`.
 - [ ] `test_name` matches the file.
 - [ ] `is_vulnerable` is `true`/`false` (not `null`).
-- [ ] `cwe` and `bug_type` filled in.
+- [ ] `cwe` and `bug_type` filled in **on every case, including safe ones**.
 - [ ] `model_or_agent`, `model_name`, `web_search_used` recorded.
 - [ ] Human intervention level noted.
+- [ ] Closed-book run: web search off, only this repo's files were read.

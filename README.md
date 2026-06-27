@@ -43,11 +43,34 @@ submissions/<your_team_or_model_name>/BenchmarkTest00027.json
 See [`participant-guide.md`](participant-guide.md) for the full rules
 (closed-book by default: **no web search** unless the organizer enables it).
 
+## Closed-book enforcement
+
+The OWASP Benchmark answer key is **publicly available online**, so a
+closed-book result is only meaningful if the agent does not look anything up
+**during the run**. This repo ships [`.claude/settings.json`](.claude/settings.json)
+that denies `WebSearch`/`WebFetch` for Claude Code. Run the agent with **only
+this repository** in context, web/browse tools off. See *participant-guide.md →
+Web search rule* for details and the equivalent for other agents.
+
 ## Scoring
 
-The organizer grades each case against the private OWASP Benchmark answer key
-(`expectedresults-1.2.csv`, **not included here**). 3 points per case:
-`is_vulnerable` (1) + `cwe` (1) + `bug_type`/category (1).
+3 points per case: `is_vulnerable` (1) + `cwe` (1) + `bug_type`/category (1).
+
+**Every case has a category even when the code is safe.** For a case you judge
+safe, set `is_vulnerable: false` **and still** fill `bug_type`/`cwe` with the
+category the code is about — otherwise you lose those 2 points. See
+*participant-guide.md → How scoring works*.
+
+### Self-grading
+
+The grading harness and answer key are in the organizer repository:
+**[owasp-benchmark-audit-organizer](https://github.com/Tivo0921/owasp-benchmark-audit-organizer)**.
+After you finish (closed-book!), you can score yourself:
+
+```bash
+# in the organizer repo
+python scripts/grade_submissions.py --submissions /path/to/your/submissions
+```
 
 ## Categories in this set
 
